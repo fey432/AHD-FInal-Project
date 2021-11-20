@@ -8,6 +8,10 @@ from multiprocessing import Process
 import numpy as np
 import imutils
 import dlib
+from flask import Flask, render_template, request, Response
+import socket
+import netifaces as ni
+import test
 
 def run_continuously(interval=1):
     """Continuously run, while executing pending jobs at each
@@ -33,6 +37,9 @@ def run_continuously(interval=1):
     continuous_thread.start()
     return cease_continuous_run
 
+class WebServer(QThread):
+    def __init__(self):
+        test.startWebServer()
 
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
@@ -80,8 +87,7 @@ class VideoThread(QThread):
             #Read images from Camera
             ret, img = cap.read()
             img = cv2.flip(img,1)
-            #thresh=img.copy()
-
+            test.updateFrame(img)
             if ret:
                 self.change_pixmap_signal.emit(img)
 
@@ -95,48 +101,27 @@ class VideoThread(QThread):
                     #Display starting x,y points with width and height
                     print("face")
                     print(x,y,w,h)
-                gray_face = gray_picture[faces.y:faces.y+int(faces.h/2),faces.x:faces.x+faces.w]
-                face = img[face.y:face.y+face.h,face.x:face.x+face.w]
-                eyes = self.eye_cascade.detectMultiScale(gray_face)
-                for (ex,ey,ew,eh) in eyes:
-                    cv2.rectangle(face,(ex,ey),(ex+ew,ey+eh),(0,255,255),2)
-                    print("eyes")
-                    print(ex,ey,ew,eh)
+                #FIXME: coding error with gray_face
+                # gray_face = gray_picture[faces.y:faces.y+int(faces.h/2),faces.x:faces.x+faces.w]
+                # face = img[face.y:face.y+face.h,face.x:face.x+face.w]
+                # eyes = self.eye_cascade.detectMultiScale(gray_face)
+                # for (ex,ey,ew,eh) in eyes:
+                #     cv2.rectangle(face,(ex,ey),(ex+ew,ey+eh),(0,255,255),2)
+                #     print("eyes")
+                #     print(ex,ey,ew,eh)
 
-
-                eye = self.cut_eyebrows(eyes)
-                keypoints = self.blob_process(eye,self.detector)
-                cv2.drawKeypoints(eye,keypoints,eye,(0,0,255))
-                cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS
+                #FIXME: fix the cut_eyebrows part
+                # eye = self.cut_eyebrows(eyes)
+                # keypoints = self.blob_process(eye,self.detector)
+                # cv2.drawKeypoints(eye,keypoints,eye,(0,0,255))
+                # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS
 
                 self.count = 0                  
 
             self.count = self.count+1
 
-            cv2.imshow('my image',img)
-            #roi = img
-            #rows, cols, _ = roi.shape
-            #gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-            #gray_roi = cv2.GaussianBlur(gray_roi, (7, 7), 0)
-
-            #_, threshold = cv2.threshold(gray_roi, 3, 255, cv2.THRESH_BINARY_INV)
-            #contours, _ = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            #contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
-
-            #for cnt in contours:
-                #(x, y, w, h) = cv2.boundingRect(cnt)
-                #print(str(x)+" " + str(y) + " " + str(w )+ " " + str(h))
-                #cv2.drawContours(roi, [cnt], -1, (0, 0, 255), 3)
-                #cv2.rectangle(roi, (x, y), (x + w, y + h), (255, 0, 0), 2)
-                #cv2.line(roi, (x + int(w/2), 0), (x + int(w/2), rows), (0, 255, 0), 2)
-                #cv2.line(roi, (0, y + int(h/2)), (cols, y + int(h/2)), (0, 255, 0), 2)
-                #break
-
-
-
-        #cv2.imshow("Threshold", threshold)
-        #cv2.imshow("gray roi", gray_roi)
-        #cv2.imshow("Roi", roi)     
+            #cv2.imshow('my image',img)
+ 
         cap.release()
 
     def stop(self):
@@ -226,11 +211,12 @@ class App(QWidget):
         self.thread.change_pixmap_signal.connect(self.update_image)
         #Start the Thread
         self.thread.start()
+        
 
 if __name__ == "__main__":
     #Creates an Application
     app = QApplication(sys.argv)
     a = App()
     a.show()
-    #Test
+    test.startWebServer()
     app.exec_()
