@@ -3,7 +3,8 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread, QRect, QSize, QObject, QEvent
-import sys, cv2, time, threading, schedule, subprocess, shutil
+import sys, cv2, time, threading, schedule
+import subprocess as sp
 from multiprocessing import Process
 import numpy as np
 import imutils
@@ -77,9 +78,9 @@ class VideoThread(QThread):
         return keypoints
 
     def run(self):
-        
         # capture from web cam
         cap = cv2.VideoCapture(0)
+        
         cap.set(3, 1280) # set video width
         cap.set(4, 720) # set video height
 
