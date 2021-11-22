@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, Response, flash
+from flask import Flask, render_template, request, Response, redirect
 import socket
 from threading import Thread
 import netifaces as ni
@@ -36,9 +36,36 @@ def index():
 
     return render_template("index.html")
 
+
+testVar = 0
+def getStatus():
+    global testVar
+    return testVar
+def toggle():
+    global testVar
+    if(getStatus() == 1):
+        testVar = 0
+    else:
+        testVar = 1
+    return testVar
+def getStatus_Text():
+    global testVar
+    if testVar:
+        return "On"
+    else:
+        return "Off"
+
 @app.route('/iot' ,methods =['GET','POST'])
 def iot():
-    return render_template("iot.html")
+    if request.method == "POST":
+        if request.form.get('LED') == 'LED':
+            toggle()
+            print(testVar)
+            pass
+    else:
+        return render_template('iot.html', comment_1 = getStatus_Text())
+
+    return render_template('iot.html', comment_1 = getStatus_Text())
 
 
 @app.route('/about' ,methods =['GET','POST'])

@@ -3,16 +3,11 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread, QRect, QSize, QObject, QEvent
-import sys, cv2, time, threading, schedule
+import sys, cv2, time, threading, schedule, test
 import subprocess as sp
 from multiprocessing import Process
 import numpy as np
-import imutils
-import dlib
-from flask import Flask, render_template, request, Response
-import socket
 import netifaces as ni
-import test
 
 def run_continuously(interval=1):
     """Continuously run, while executing pending jobs at each
