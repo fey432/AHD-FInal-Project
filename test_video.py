@@ -12,7 +12,7 @@ import netifaces as ni
 app = Flask(__name__)
 
 # for local webcam use cv2.VideoCapture(0)
-camera = cv2.VideoCapture(1)
+camera = cv2.VideoCapture(0)
 
 def gen_frames():  # generate frame by frame from camera
     while True:

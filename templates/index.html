@@ -56,30 +56,37 @@
                 <div class="demo-charts mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col mdl-grid">
                     <svg fill="currentColor" width="200px" height="200px" viewBox="0 0 1 1"
                         class="demo-chart mdl-cell mdl-cell--4-col mdl-cell--3-col-desktop">
-                        <use xlink:href="#piechart" mask="url(#piemask)"/>
+                        <use xlink:href="#piechart" mask="url(#piemask)" />
                         <text x="0.5" y="0.5" font-family="Roboto" font-size="0.2" fill="#69c1f9" text-anchor="middle"
                             dy="0.05">{{comment_temp}}</text>
-                        <text x="0.5" y="0.5" font-family="Roboto" font-size="0.1" fill="#2" text-anchor="middle"
+                        <text x="0.5" y="0.5" font-family="Roboto" font-size="0.1" fill="#2991c6" text-anchor="middle"
                             dy="0.2">Temperature
                         </text>
                     </svg>
                     <svg fill="currentColor" width="200px" height="200px" viewBox="0 0 1 1"
                         class="demo-chart mdl-cell mdl-cell--4-col mdl-cell--3-col-desktop">
                         <use xlink:href="#piechart" mask="url(#piemask)" />
-                        <text x="0.5" y="0.5" font-family="Roboto" font-size="0.3" fill="#888" text-anchor="middle"
-                            dy="0.1">82<tspan dy="-0.07" font-size="0.2">%</tspan></text>
+                        <text x="0.5" y="0.5" font-family="Roboto" font-size="0.2" fill="#69c1f9" text-anchor="middle"
+                            dy="0.05">82<tspan dy="-0.07" font-size="0.15">%</tspan></text>
+                        <text x="0.5" y="0.5" font-family="Roboto" font-size="0.1" fill="#2991c6" text-anchor="middle"
+                            dy="0.2">Humidity</text>
                     </svg>
                     <svg fill="currentColor" width="200px" height="200px" viewBox="0 0 1 1"
                         class="demo-chart mdl-cell mdl-cell--4-col mdl-cell--3-col-desktop">
                         <use xlink:href="#piechart" mask="url(#piemask)" />
-                        <text x="0.5" y="0.5" font-family="Roboto" font-size="0.3" fill="#888" text-anchor="middle"
-                            dy="0.1">82<tspan dy="-0.07" font-size="0.2">%</tspan></text>
+                        <text x="0.5" y="0.5" font-family="Roboto" font-size="0.2" fill="#69c1f9" text-anchor="middle"
+                            dy="0.05">350<tspan dy="0" font-size="0.075">mmHg</tspan></text>
+                        <text x="0.5" y="0.5" font-family="Roboto" font-size="0.1" fill="#2991c6" text-anchor="middle"
+                            dy="0.2">Pressure</text>
                     </svg>
                     <svg fill="currentColor" width="200px" height="200px" viewBox="0 0 1 1"
                         class="demo-chart mdl-cell mdl-cell--4-col mdl-cell--3-col-desktop">
                         <use xlink:href="#piechart" mask="url(#piemask)" />
-                        <text x="0.5" y="0.5" font-family="Roboto" font-size="0.3" fill="#888" text-anchor="middle"
-                            dy="0.1">82<tspan dy="-0.07" font-size="0.2">%</tspan></text>
+                        <text x="0.5" y="0.5" font-family="Roboto" font-size="0.2" fill="#69c1f9" text-anchor="middle"
+                            dy="0.05">{{comment_time}}</text>
+                        <text x="0.5" y="0.5" font-family="Roboto" font-size="0.1" fill="#2991c6" text-anchor="middle"
+                            dy="0.2">Current Time
+                        </text>
                     </svg>
                 </div>
                 <div class="demo-cards mdl-cell mdl-cell--4-col mdl-cell--8-col-tablet mdl-grid mdl-grid--no-spacing">
@@ -90,6 +97,8 @@
                         </div>
                         <div class="mdl-card__supporting-text mdl-color-text--grey-600">
                             No Updates
+                            <br><br>
+                            <br><br>
                         </div>
                     </div>
                     <div class="demo-separator mdl-cell--1-col"></div>
@@ -106,7 +115,7 @@
                         <div class="mdl-card__actions mdl-card--border">
 
                             <body>
-                                <button type="button" class="mdl-button show-modal">Start</button>
+                                <button type="button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored show-modal">Start</button>
                                 <dialog class="mdl-dialog">
                                     <div class="mdl-dialog__content">
                                         <p>
@@ -122,7 +131,7 @@
 
                                             <div class="mdl-dialog__actions mdl-dialog__actions--full-width">
                                                 <button type="submit" name="send" value="send"
-                                                    class="mdl-button mdl-js-button mdl-js-ripple-effect">Send</button>
+                                                    class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored">Send</button>
                                                 <button type="button"
                                                     class="mdl-button  mdl-js-button mdl-js-ripple-effect close">Discard</button>
                                             </div>

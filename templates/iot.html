@@ -77,13 +77,13 @@
           <div class="demo-cards mdl-cell mdl-cell--4-col mdl-cell--8-col-tablet mdl-grid mdl-grid--no-spacing">
             <div
               class="demo-updates mdl-card mdl-shadow--2dp mdl-cell mdl-cell--4-col mdl-cell--4-col-tablet mdl-cell--12-col-desktop">
-              <div class="mdl-card__title mdl-card--expand mdl-color--teal-300" style="color: #fff;">
+              <div class="mdl-card__title mdl-card--expand mdl-color--teal-300" style="color: rgba(255, 255, 255, 0.837); background: url('https://media.istockphoto.com/photos/empty-minimalist-room-with-gray-wall-on-background-picture-id1129813604?k=20&m=1129813604&s=612x612&w=0&h=FrADrPmofSeBG1T0o5YefRviG_5fq0oDPZosUq84Ax0=') center / cover;">
                 <h2 class="mdl-card__title-text">Temperature Control</h2>
               </div>
               <div class="mdl-card__supporting-text">
-                <input class="mdl-slider mdl-js-slider" type="range" min="0" max="100" value="50" tabindex="0"
-                  id="temp_slider">
-                <p style="text-align: center">Value: <span id="temp_value"></span></p>
+                <input class="mdl-slider mdl-js-slider" type="range" min="0" max="100" value="{{comment_curr_temp}}" tabindex="0"
+                  id="temp_slider" name = 'temp_slider'>
+                <div style="text-align: center;">Temperature: <span id="temp_value"></span></div>
               </div>
               <script>
                 var rangeslider = document.getElementById("temp_slider");
@@ -106,8 +106,8 @@
           <div class="demo-cards mdl-cell mdl-cell--4-col mdl-cell--8-col-tablet mdl-grid mdl-grid--no-spacing">
             <div
               class="demo-updates mdl-card mdl-shadow--2dp mdl-cell mdl-cell--4-col mdl-cell--4-col-tablet mdl-cell--12-col-desktop">
-              <div class="mdl-card__title mdl-card--expand mdl-color--teal-300">
-                <h2 class="mdl-card__title-text">Object B</h2>
+              <div class="mdl-card__title mdl-card--expand mdl-color--teal-300" style="color: #fff; background: url('https://images.huffingtonpost.com/2016-12-16-1481904065-3013058-LightBulb-thumb.jpg') center / cover;">
+                <h2 class="mdl-card__title-text">LED 2</h2>
               </div>
               <div class="mdl-card__supporting-text">
                {{comment_2}}
@@ -124,8 +124,8 @@
           <div class="demo-cards mdl-cell mdl-cell--4-col mdl-cell--8-col-tablet mdl-grid mdl-grid--no-spacing">
             <div
               class="demo-updates mdl-card mdl-shadow--2dp mdl-cell mdl-cell--4-col mdl-cell--4-col-tablet mdl-cell--12-col-desktop">
-              <div class="mdl-card__title mdl-card--expand mdl-color--teal-300">
-                <h2 class="mdl-card__title-text">Object C</h2>
+              <div class="mdl-card__title mdl-card--expand mdl-color--teal-300" style="color: #fff; background: url('https://assets.justenergy.com/wp-content/uploads/2018/07/CFL-1.jpg') center / cover;" >
+                <h2 class="mdl-card__title-text">LED 3</h2>
               </div>
               <div class="mdl-card__supporting-text">
                 {{comment_3}}

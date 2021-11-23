@@ -12,6 +12,7 @@ import netifaces as ni
 import cv2
 import numpy as np
 import GPIO_Test
+from datetime import datetime
 
 #Global Variables
 frame = None
@@ -41,9 +42,9 @@ def index():
         else:
             pass
     elif request.method == 'GET':
-        return render_template('index.html', comment_temp = GPIO_Test.get_Temperature_text(1))
+        return render_template('index.html', comment_temp = GPIO_Test.get_Temperature_text(1), comment_time = datetime.now().strftime("%H:%M") )
 
-    return render_template("index.html", comment_temp = GPIO_Test.get_Temperature_text(1))
+    return render_template("index.html", comment_temp = GPIO_Test.get_Temperature_text(1), comment_time = datetime.now().strftime("%H:%M"))
 
 
 
@@ -58,10 +59,13 @@ def iot():
             pass
         elif request.form.get('LED_3') == 'LED_3':
             GPIO_Test.toggle_LED(13)
+        elif request.form.get('TEMP') == "TEMP":
+            temp = request.form.get('temp_slider')
+            GPIO_Test.set_Temperature(temp)
     else:
-        return render_template('iot.html', comment_1 = GPIO_Test.get_LED_Status_text(26), comment_2 = GPIO_Test.get_LED_Status_text(19), comment_3 = GPIO_Test.get_LED_Status_text(13))
+        return render_template('iot.html', comment_1 = GPIO_Test.get_LED_Status_text(26), comment_2 = GPIO_Test.get_LED_Status_text(19), comment_3 = GPIO_Test.get_LED_Status_text(13), comment_curr_temp = GPIO_Test.get_Temperature())
 
-    return render_template('iot.html', comment_1 = GPIO_Test.get_LED_Status_text(26), comment_2 = GPIO_Test.get_LED_Status_text(19), comment_3 = GPIO_Test.get_LED_Status_text(13))
+    return render_template('iot.html', comment_1 = GPIO_Test.get_LED_Status_text(26), comment_2 = GPIO_Test.get_LED_Status_text(19), comment_3 = GPIO_Test.get_LED_Status_text(13), comment_curr_temp = GPIO_Test.get_Temperature())
 
 
 @app.route('/about' ,methods =['GET','POST'])
