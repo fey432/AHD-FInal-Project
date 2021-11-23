@@ -11,6 +11,7 @@ import numpy as np
 import GPIO_Test
 
 blob_threshold = 50
+eye_blob = np.zeros((300,200,3), dtype=np.uint8)
 
 def run_continuously(interval=1):
     """Continuously run, while executing pending jobs at each
@@ -51,7 +52,10 @@ class VideoThread(QThread):
         self.eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
         self.detector_params = cv2.SimpleBlobDetector_Params()
         self.detector_params.filterByArea = True
-        self.detector_params.maxArea = 1500
+        self.detector_params.minArea = 20
+        self.detector_params.maxArea = 2000
+        self.detector_params.filterByCircularity = False
+        self.detector_params.minCircularity = 0.5
         self.detector = cv2.SimpleBlobDetector_create(self.detector_params)
         self.count = 0
         self.fw = [0,0,0,0]
@@ -64,7 +68,7 @@ class VideoThread(QThread):
                 
     def detect_faces(self,img, classifier):
         gray_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        face = classifier.detectMultiScale(gray_frame, 1.3, 5)
+        face = classifier.detectMultiScale(gray_frame, 1.1, 3)
         if len(face) > 1:
             biggest = (0, 0, 0, 0)
             for i in face:
@@ -81,7 +85,7 @@ class VideoThread(QThread):
 
     def detect_eyes(self,img,classifier):
         gray_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        eyes = classifier.detectMultiScale(gray_frame, 1.3, 5) # detect eyes
+        eyes = classifier.detectMultiScale(gray_frame, 1.1, 3) # detect eyes
         width = np.size(img, 1) # get face frame width
         height = np.size(img, 0) # get face frame height
         left_eye = None
@@ -91,13 +95,14 @@ class VideoThread(QThread):
         for (x, y, w, h) in eyes:
             if y > height / 2:
                 pass
-            eyecenter = x + w / 2  # get the eye center
-            if eyecenter < width * 0.5:
-                left_eye = img[y:y + h, x:x + w]
-                left_ew = [x,y,w,h]
             else:
-                right_eye = img[y:y + h, x:x + w]
-                right_ew = [x,y,w,h]
+                eyecenter = x + w / 2  # get the eye center
+                if eyecenter < width * 0.5:
+                    left_eye = img[y:y + h, x:x + w]
+                    left_ew = [x,y,w,h]
+                else:
+                    right_eye = img[y:y + h, x:x + w]
+                    right_ew = [x,y,w,h]
         return [left_eye, right_eye], [left_ew, right_ew]
 
     def cut_eyebrows(self,img):
@@ -110,16 +115,17 @@ class VideoThread(QThread):
         gray_frame = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         _,img = cv2.threshold(gray_frame,threshold,255,cv2.THRESH_BINARY)
         img = cv2.erode(img,None,2)
-        img = cv2.dilate(img,None,4)
+        img = cv2.dilate(img,None,5)
         img = cv2.medianBlur(img,3)
         keypoints = detector.detect(img)
-        return keypoints
+        return img,keypoints
 
     def run(self):
         # capture from web cam
-        cap = cv2.VideoCapture(0)        
+        cap = cv2.VideoCapture(1,cv2.CAP_DSHOW)        
         cap.set(3, 1280) # set video width
         cap.set(4, 720) # set video height
+        cap.set(15,-5) # set exposure
 
         while (self._run_flag):
             #Read images from Camera
@@ -146,8 +152,9 @@ class VideoThread(QThread):
                     for eye in eyes:
                         if eye is not None:
                             self.eye_flag[self.eyenum] = 1
-                            #eye = self.cut_eyebrows(eye)
-                            keypoints = self.blob_process(eye, blob_threshold, self.detector)
+                            eye = self.cut_eyebrows(eye)
+                            global eye_blob
+                            eye_blob,keypoints = self.blob_process(eye, blob_threshold, self.detector)
                             for keypoint in keypoints:
                                 self.ep[self.eyenum] = [int(keypoint.pt[0]),int(keypoint.pt[1])]
                                 #print(self.ep[self.eyenum])
@@ -165,30 +172,33 @@ class VideoThread(QThread):
                                 prev_eye_flag = self.eye_flag
                                 self.State = "BLINKING"
                         case "BLINKING":
-                            if(iter>4):
+                            if(iter>3):
                                 print("lost eye detection")
                                 self.State = "NOT_DETECTED"
                             else:
                                 if((sum(self.eye_flag)-sum(prev_eye_flag))<1):
                                     iter = iter+1
                                 else:
-                                    if(iter<3):
+                                    if(iter<2):
                                         if(prev_eye_flag[0]==0 and prev_eye_flag[0]==0):
                                             print("blink detected")
-                                        elif(prev_eye_flag[0]==0):
+                                        if(prev_eye_flag[0]==0):
                                             print("left wink detected")
+                                            
                                         else:
                                             print("right wink detected")
                                     else: 
                                         if(prev_eye_flag[0]==0 and prev_eye_flag[0]==0):
                                             print("long blink detected")
-                                        elif(prev_eye_flag[0]==0):
+                                        if(prev_eye_flag[0]==0):
                                             print("long left wink detected")
                                         else:
                                             print("long right wink detected")
                                     self.State = "DETECTED"
                         case _:
                             self.State = "DETECTED"
+                else:
+                    self.State = "NOT_DETECTED"
                             
                 self.count = 0 
             self.count = self.count+1
@@ -209,7 +219,9 @@ class App(QWidget):
     def update_image(self,cv_img):
         """Updates the image_label with a new opencv image"""
         qt_img = self.convert_cv_qt(cv_img)
-        self.image_label.setPixmap(qt_img)
+        self.image_label1.setPixmap(qt_img)
+        qt_eye = self.convert_cv_qt(eye_blob)
+        self.image_label2.setPixmap(qt_eye)
     
     def convert_cv_qt(self,cv_img):
         """Convert from an opencv image to QPixmap"""
@@ -286,8 +298,10 @@ class App(QWidget):
         self.left_layout_1.addWidget(self.slider)
         
         #Create the Label that Holds the Image
-        self.image_label = QLabel(self.right_side)
-        self.image_label.setGeometry(QRect(0,0,640,360))
+        self.image_label1 = QLabel(self.right_side)
+        self.image_label1.setGeometry(QRect(0,0,640,360))
+        self.image_label2 = QLabel(self.right_side)
+        self.image_label2.setGeometry(QRect(0,361,640,360))
         #self.image_label.setAlignment(Qt.AlignCenter)
         #Creates the Video Capture Thread
         self.thread = VideoThread()
