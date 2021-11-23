@@ -3,12 +3,12 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread, QRect, QSize, QObject, QEvent
-import sys, cv2, time, threading, schedule, test
+import sys, cv2, time, threading, schedule
 import subprocess as sp
 from multiprocessing import Process
 import numpy as np
 #import netifaces as ni
-import GPIO_Test
+#import GPIO_Test
 
 blob_threshold = 50
 eye_blob = np.zeros((300,200,3), dtype=np.uint8)
@@ -51,11 +51,12 @@ class VideoThread(QThread):
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         self.eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
         self.detector_params = cv2.SimpleBlobDetector_Params()
-        self.detector_params.filterByArea = True
-        self.detector_params.minArea = 20
-        self.detector_params.maxArea = 2000
+        self.detector_params.filterByArea = False
+        self.detector_params.minArea = 50
         self.detector_params.filterByCircularity = False
-        self.detector_params.minCircularity = 0.5
+        self.detector_params.minCircularity = 0.1
+        self.detector_params.filterByInertia = False
+        self.detector_params.minInertiaRatio = 0.1
         self.detector = cv2.SimpleBlobDetector_create(self.detector_params)
         self.count = 0
         self.fw = [0,0,0,0]
@@ -68,7 +69,7 @@ class VideoThread(QThread):
                 
     def detect_faces(self,img, classifier):
         gray_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        face = classifier.detectMultiScale(gray_frame, 1.1, 3)
+        face = classifier.detectMultiScale(gray_frame, 1.05, 3)
         if len(face) > 1:
             biggest = (0, 0, 0, 0)
             for i in face:
@@ -85,7 +86,7 @@ class VideoThread(QThread):
 
     def detect_eyes(self,img,classifier):
         gray_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        eyes = classifier.detectMultiScale(gray_frame, 1.1, 3) # detect eyes
+        eyes = classifier.detectMultiScale(gray_frame, 1.2, 3) # detect eyes
         width = np.size(img, 1) # get face frame width
         height = np.size(img, 0) # get face frame height
         left_eye = None
@@ -93,7 +94,7 @@ class VideoThread(QThread):
         right_eye = None
         right_ew = [0,0,0,0]
         for (x, y, w, h) in eyes:
-            if y > height / 2:
+            if ((y<height/4) or (y>height/2)):
                 pass
             else:
                 eyecenter = x + w / 2  # get the eye center
@@ -114,18 +115,19 @@ class VideoThread(QThread):
     def blob_process(self,img,threshold,detector):
         gray_frame = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         _,img = cv2.threshold(gray_frame,threshold,255,cv2.THRESH_BINARY)
-        img = cv2.erode(img,None,2)
-        img = cv2.dilate(img,None,5)
+        img = cv2.erode(img,None,10)
+        img = cv2.dilate(img,None,10)
         img = cv2.medianBlur(img,3)
         keypoints = detector.detect(img)
         return img,keypoints
 
     def run(self):
         # capture from web cam
+        #cap = cv2.VideoCapture(0)        
         cap = cv2.VideoCapture(1,cv2.CAP_DSHOW)        
         cap.set(3, 1280) # set video width
         cap.set(4, 720) # set video height
-        cap.set(15,-5) # set exposure
+        cap.set(15,-3) # set exposure
 
         while (self._run_flag):
             #Read images from Camera
@@ -155,54 +157,53 @@ class VideoThread(QThread):
                             eye = self.cut_eyebrows(eye)
                             global eye_blob
                             eye_blob,keypoints = self.blob_process(eye, blob_threshold, self.detector)
+                            print(len(keypoints))
                             for keypoint in keypoints:
                                 self.ep[self.eyenum] = [int(keypoint.pt[0]),int(keypoint.pt[1])]
-                                #print(self.ep[self.eyenum])
+                                print(self.ep[self.eyenum])
                         self.eyenum = self.eyenum+1
                 
                     #Determine if person blinked (right now only depened on eye detection, eye tracking is not working great)
                     #print(self.eye_flag)
-                    match self.State:
-                        case "NOT_DETECTED":
-                            if (sum(self.eye_flag)>1):
-                                self.State = "DETECTED"
-                        case "DETECTED":
-                            if (sum(self.eye_flag)<2):
-                                iter = 1
-                                prev_eye_flag = self.eye_flag
-                                self.State = "BLINKING"
-                        case "BLINKING":
-                            if(iter>3):
-                                print("lost eye detection")
-                                self.State = "NOT_DETECTED"
-                            else:
-                                if((sum(self.eye_flag)-sum(prev_eye_flag))<1):
-                                    iter = iter+1
-                                else:
-                                    if(iter<2):
-                                        if(prev_eye_flag[0]==0 and prev_eye_flag[0]==0):
-                                            print("blink detected")
-                                        if(prev_eye_flag[0]==0):
-                                            print("left wink detected")
-                                            
-                                        else:
-                                            print("right wink detected")
-                                    else: 
-                                        if(prev_eye_flag[0]==0 and prev_eye_flag[0]==0):
-                                            print("long blink detected")
-                                        if(prev_eye_flag[0]==0):
-                                            print("long left wink detected")
-                                        else:
-                                            print("long right wink detected")
-                                    self.State = "DETECTED"
-                        case _:
+                    if (self.State == "NOT_DETECTED"):
+                        if (sum(self.eye_flag)>1):
                             self.State = "DETECTED"
+                    elif (self.State == "DETECTED"):
+                        if (sum(self.eye_flag)<2):
+                            iter = 1
+                            prev_eye_flag = self.eye_flag
+                            self.State = "BLINKING"
+                    elif (self.State == "BLINKING"):
+                        if(iter>3):
+                            print("lost eye detection")
+                            self.State = "NOT_DETECTED"
+                        else:
+                            if((sum(self.eye_flag)-sum(prev_eye_flag))<1):
+                                iter = iter+1
+                            else:
+                                if(iter<2):
+                                    if(prev_eye_flag[0]==0 and prev_eye_flag[1]==0):
+                                        print("blink detected")
+                                    elif(prev_eye_flag[0]==0):
+                                        print("left wink detected")
+                                    else:
+                                        print("right wink detected")
+                                else: 
+                                    if(prev_eye_flag[0]==0 and prev_eye_flag[1]==0):
+                                        print("long blink detected")
+                                    elif(prev_eye_flag[0]==0):
+                                        print("long left wink detected")
+                                    else:
+                                        print("long right wink detected")
+                                self.State = "DETECTED"
+                    else:
+                        self.State = "DETECTED"
                 else:
                     self.State = "NOT_DETECTED"
                             
                 self.count = 0 
             self.count = self.count+1
-        test.updateFrame(img)
+        #test.updateFrame(img)
  
         cap.release()
 
@@ -292,7 +293,7 @@ class App(QWidget):
         self.slider.setTickPosition(QSlider.TicksBothSides)
         self.slider.setMinimum(0)
         self.slider.setMaximum(255)
-        self.slider.setValue(100)
+        self.slider.setValue(15)
         self.slider.setTickInterval(1)
         self.slider.valueChanged.connect(self.changeThreshold)
         self.left_layout_1.addWidget(self.slider)
