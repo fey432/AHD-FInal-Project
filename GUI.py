@@ -8,6 +8,7 @@ import subprocess as sp
 from multiprocessing import Process
 import numpy as np
 import netifaces as ni
+import GPIO_Test
 
 def run_continuously(interval=1):
     """Continuously run, while executing pending jobs at each
@@ -216,3 +217,4 @@ if __name__ == "__main__":
     a.show()
     test.startWebServer()
     app.exec_()
+    GPIO_Test.__del__()

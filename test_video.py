@@ -1,3 +1,10 @@
+'''
+test_video.py
+Author(s): Raymond Fey
+This python code is used to update the video feed on the Flask
+Web Server without the need or refreshing (use_reloader = True)
+'''
+
 from flask import Flask, render_template, Response
 import cv2
 import netifaces as ni

@@ -1,10 +1,19 @@
+'''
+test.py
+Author(s): Raymond Fey
+This python code is to create the Flask Web Server and
+control the web page interactions
+'''
+
 from flask import Flask, render_template, request, Response, redirect
 import socket
 from threading import Thread
 import netifaces as ni
 import cv2
 import numpy as np
+import GPIO_Test
 
+#Global Variables
 frame = None
 
 def updateFrame(feed):
@@ -32,40 +41,27 @@ def index():
         else:
             pass
     elif request.method == 'GET':
-        return render_template('index.html')
+        return render_template('index.html', comment_temp = GPIO_Test.get_Temperature_text(1))
 
-    return render_template("index.html")
+    return render_template("index.html", comment_temp = GPIO_Test.get_Temperature_text(1))
 
 
-testVar = 0
-def getStatus():
-    global testVar
-    return testVar
-def toggle():
-    global testVar
-    if(getStatus() == 1):
-        testVar = 0
-    else:
-        testVar = 1
-    return testVar
-def getStatus_Text():
-    global testVar
-    if testVar:
-        return "On"
-    else:
-        return "Off"
 
 @app.route('/iot' ,methods =['GET','POST'])
 def iot():
     if request.method == "POST":
         if request.form.get('LED') == 'LED':
-            toggle()
-            print(testVar)
+            GPIO_Test.toggle_LED(26)
             pass
+        elif request.form.get('LED_2') == 'LED_2':
+            GPIO_Test.toggle_LED(19)
+            pass
+        elif request.form.get('LED_3') == 'LED_3':
+            GPIO_Test.toggle_LED(13)
     else:
-        return render_template('iot.html', comment_1 = getStatus_Text())
+        return render_template('iot.html', comment_1 = GPIO_Test.get_LED_Status_text(26), comment_2 = GPIO_Test.get_LED_Status_text(19), comment_3 = GPIO_Test.get_LED_Status_text(13))
 
-    return render_template('iot.html', comment_1 = getStatus_Text())
+    return render_template('iot.html', comment_1 = GPIO_Test.get_LED_Status_text(26), comment_2 = GPIO_Test.get_LED_Status_text(19), comment_3 = GPIO_Test.get_LED_Status_text(13))
 
 
 @app.route('/about' ,methods =['GET','POST'])
