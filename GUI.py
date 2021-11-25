@@ -7,8 +7,9 @@ import sys, cv2, time, threading, schedule
 import subprocess as sp
 from multiprocessing import Process
 import numpy as np
-#import netifaces as ni
-#import GPIO_Test
+import netifaces as ni
+import GPIO_Test
+import test
 
 blob_threshold = 50
 eye_blob = np.zeros((300,200,3), dtype=np.uint8)
@@ -124,7 +125,7 @@ class VideoThread(QThread):
     def run(self):
         # capture from web cam
         #cap = cv2.VideoCapture(0)        
-        cap = cv2.VideoCapture(1,cv2.CAP_DSHOW)        
+        cap = cv2.VideoCapture(0)        
         cap.set(3, 1280) # set video width
         cap.set(4, 720) # set video height
         cap.set(15,-3) # set exposure
@@ -203,7 +204,7 @@ class VideoThread(QThread):
                             
                 self.count = 0 
             self.count = self.count+1
-        #test.updateFrame(img)
+            test.updateFrame(img)
  
         cap.release()
 
@@ -237,6 +238,9 @@ class App(QWidget):
         global blob_threshold
         blob_threshold = value
 
+    def get_Temp_Slider(self):
+        self.temp_value.setText(str(self.temp_slider.value()))
+
     def __init__(self):
         super().__init__()
         #Create a Widget
@@ -265,29 +269,85 @@ class App(QWidget):
         self.left_layout_vertical.addLayout(self.left_layout_2)
         self.left_layout_3 = QHBoxLayout()
         self.left_layout_vertical.addLayout(self.left_layout_3)
+        self.left_layout_4 = QHBoxLayout()
+        self.left_layout_vertical.addLayout(self.left_layout_4)
 
+        '''
+        Create the LED Controls
+        '''
+        self.light_widget = QWidget()
+        self.left_layout_2.addWidget(self.light_widget)
+        #Create Vox
+        self.light_v_layout = QVBoxLayout(self.light_widget)
+        #Create Title
+        self.light_title_widget = QWidget()
+        self.light_v_layout.addWidget(self.light_title_widget)
+        self.light_title = QLabel(self.light_title_widget)
+        self.light_title.setText("Lighting Control")
+        #Create the Buttons
         self.button_1 = QPushButton()
-        self.button_1.setText("1")
+        self.button_1.setText("Toggle LED")
+        self.button_1.clicked.connect(lambda: GPIO_Test.toggle_LED(26))
         self.button_2 = QPushButton()
-        self.button_2.setText("2")
+        self.button_2.setText("Toggle LED 2")
+        self.button_2.clicked.connect(lambda: GPIO_Test.toggle_LED(19))
         self.button_3 = QPushButton()
-        self.button_3.setText("3")
+        self.button_3.setText("Toggle LED 3")
+        self.button_3.clicked.connect(lambda: GPIO_Test.toggle_LED(13))
+        #Create the horizontal button arrangement
+        self.light_h_layout = QHBoxLayout()
+        self.light_v_layout.addLayout(self.light_h_layout)
+        self.light_h_layout.addWidget(self.button_1)
+        self.light_h_layout.addWidget(self.button_2)
+        self.light_h_layout.addWidget(self.button_3)
 
-        self.left_layout_2.addWidget(self.button_1)
-        self.left_layout_2.addWidget(self.button_2)
-        self.left_layout_2.addWidget(self.button_3)
-
+        '''
+        Create Temperature Controls
+        '''
+        self.temp_widget = QWidget()
+        self.left_layout_3.addWidget(self.temp_widget)
+        #Create VBox
+        self.temp_v_layout = QVBoxLayout(self.temp_widget)
+        #Create Title
+        self.temp_title_widget = QWidget()
+        self.temp_v_layout.addWidget(self.temp_title_widget)
+        self.temp_title = QLabel(self.temp_title_widget)
+        self.temp_title.setText("Temperature Control")
+        #Put slider at top
+        self.temp_slider = QSlider(Qt.Horizontal)
+        self.temp_slider.setFocusPolicy(Qt.StrongFocus)
+        self.temp_slider.setMinimum(0)
+        self.temp_slider.setMaximum(100)
+        self.temp_slider.setValue(GPIO_Test.get_Temperature())
+        self.temp_slider.setTickInterval(1)
+        self.temp_v_layout.addWidget(self.temp_slider)
+        #Put button at bottom
         self.button_4 = QPushButton()
-        self.button_4.setText("4")
-        self.button_5 = QPushButton()
-        self.button_5.setText("5")
-        self.button_6 = QPushButton()
-        self.button_6.setText("6")
+        self.button_4.setText("Set Temperature")
+        self.button_4.clicked.connect(lambda: GPIO_Test.set_Temperature(self.temp_slider.value()))
+        self.temp_v_layout.addWidget(self.button_4)
 
-        self.left_layout_3.addWidget(self.button_4)
-        self.left_layout_3.addWidget(self.button_5)
-        self.left_layout_3.addWidget(self.button_6)
+        #Create Temperature Label
+        self.temp_label_widget = QWidget()
+        self.temp_v_layout.addWidget(self.temp_label_widget)
+
+        self.temp_value = QLabel(self.temp_label_widget)
+        self.temp_value.setText(str(GPIO_Test.get_Temperature()))
+        self.temp_slider.valueChanged.connect(self.get_Temp_Slider)
         
+        '''
+        Create the message box
+        '''
+        self.msg_widget = QWidget()
+        self.msg = QTextEdit(self.msg_widget)
+        self.msg.setReadOnly(True)
+        self.msg.setPlainText("Hello")
+        self.left_layout_4.addWidget(self.msg_widget)
+
+
+        '''
+        Create the Threshold Slider for Eye Detection
+        '''
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setFocusPolicy(Qt.StrongFocus)
         self.slider.setTickPosition(QSlider.TicksBothSides)
@@ -316,7 +376,8 @@ if __name__ == "__main__":
     #Creates an Application
     app = QApplication(sys.argv)
     a = App()
+    
     a.show()
-    #test.startWebServer()
+    test.startWebServer()
     app.exec_()
     GPIO_Test.__del__()
