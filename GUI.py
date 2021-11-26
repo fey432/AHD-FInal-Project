@@ -258,6 +258,8 @@ class App(QWidget):
         shadow = QGraphicsDropShadowEffect()
         shadow2 = QGraphicsDropShadowEffect()
         shadow3 = QGraphicsDropShadowEffect()
+        shadow4 = QGraphicsDropShadowEffect()
+        shadow5 = QGraphicsDropShadowEffect()
         shadow.setBlurRadius(20)
         shadow.setColor(QColor(0,0,0,60))
         shadow.setOffset(1)
@@ -267,7 +269,12 @@ class App(QWidget):
         shadow3.setBlurRadius(20)
         shadow3.setColor(QColor(0,0,0,60))
         shadow3.setOffset(1)
-
+        shadow4.setBlurRadius(20)
+        shadow4.setColor(QColor(0,0,0,60))
+        shadow4.setOffset(1)
+        shadow5.setBlurRadius(20)
+        shadow5.setColor(QColor(0,0,0,60))
+        shadow5.setOffset(1)
 
         #Create a Widget
         self.setWindowTitle("AHD Final Project")
@@ -405,14 +412,75 @@ class App(QWidget):
         #endregion
         
         '''
-        Create the message box
+        Create the message box and command list
         '''
         #region
+        #Create the Hbox for messages and command list
+        self.msg_command_widget = QWidget()
+        self.left_layout_4.addWidget(self.msg_command_widget)
+        self.msg_command_layout = QHBoxLayout(self.msg_command_widget)
+        self.msg_command_layout.setSpacing(20)
+
+        #Create the V Box for the messages
         self.msg_widget = QWidget()
-        self.msg = QTextEdit(self.msg_widget)
-        self.msg.setReadOnly(True)
-        self.msg.setPlainText("Hello")
-        self.left_layout_4.addWidget(self.msg_widget)
+        self.msg_command_layout.addWidget(self.msg_widget)
+        self.msg_widget.setStyleSheet("background-color: rgb(255,255,255);")
+        self.msg_widget.setGraphicsEffect(shadow4)
+        self.msg_v_layout = QVBoxLayout(self.msg_widget)
+
+        #Create message title
+        self.msg_title_widget = QWidget()
+        self.msg_title_widget.setStyleSheet("background-color: rgb(106,180,172);")
+        self.msg_title_widget.setMaximumHeight(60)
+        self.msg_v_layout.addWidget(self.msg_title_widget)
+        self.msg_v_layout.setContentsMargins(0,0,0,0)
+        self.msg_v_layout.setSpacing(0)
+        self.msg_title = QLabel(self.msg_title_widget)
+        self.msg_title.setText("Updates")
+        self.msg_title.setStyleSheet("color: rgb(255,255,255);")
+        self.msg_title.setFont(QFont('PibotoLt', 15))
+        self.msg_title.setGeometry(QRect(25,0,500,50))
+
+        #Create the message area
+        self.msg_text_widget = QWidget()
+        self.msg_text_widget.setMinimumHeight(100)
+        self.msg_text = QTextEdit(self.msg_text_widget)
+        self.msg_text.setMinimumWidth(300)
+        self.msg_v_layout.addWidget(self.msg_text_widget)
+        self.msg_text.setReadOnly(True)
+        self.msg_text.setFont(QFont('PibotoLt', 10))
+        self.msg_text.setPlainText("No Updates...")
+
+        #Creaet the Command List
+        #Create the V Box for the cmd
+        self.cmd_widget = QWidget()
+        self.msg_command_layout.addWidget(self.cmd_widget)
+        self.cmd_widget.setStyleSheet("background-color: rgb(255,255,255);")
+        self.cmd_widget.setGraphicsEffect(shadow5)
+        self.cmd_v_layout = QVBoxLayout(self.cmd_widget)
+
+        #Create cmd title
+        self.cmd_title_widget = QWidget()
+        self.cmd_title_widget.setStyleSheet("background-color: rgb(106,180,172);")
+        self.cmd_title_widget.setMaximumHeight(100)
+        self.cmd_v_layout.addWidget(self.cmd_title_widget)
+        self.cmd_v_layout.setContentsMargins(0,0,0,0)
+        self.cmd_v_layout.setSpacing(0)
+        self.cmd_title = QLabel(self.cmd_title_widget)
+        self.cmd_title.setText("Command List")
+        self.cmd_title.setStyleSheet("color: rgb(255,255,255);")
+        self.cmd_title.setFont(QFont('PibotoLt', 15))
+        self.cmd_title.setGeometry(QRect(25,0,500,50))
+
+        #Create the cmd area
+        self.cmd_text_widget = QWidget()
+        self.cmd_text_widget.setMinimumHeight(100)
+        self.cmd_text = QTextEdit(self.cmd_text_widget)
+        self.cmd_text.setMinimumWidth(300)
+        self.cmd_v_layout.addWidget(self.cmd_text_widget)
+        self.cmd_text.setReadOnly(True)
+        self.cmd_text.setFont(QFont('PibotoLt', 10))
+        self.cmd_text.setPlainText("Single Blink")
         #endregion
 
         '''
