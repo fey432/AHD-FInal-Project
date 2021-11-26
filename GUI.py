@@ -131,7 +131,10 @@ class VideoThread(QThread):
         cap.set(15,-3) # set exposure
 
         while (self._run_flag):
-            #Read images from Camera
+            '''
+            Read images from Camera
+            '''
+            #region
             ret, img = cap.read()
             img = cv2.flip(img,1)
             cv2.rectangle(img,(self.fw[0],self.fw[1]),(self.fw[0]+self.fw[2],self.fw[1]+self.fw[3]),(255,255,0),2) 
@@ -139,7 +142,8 @@ class VideoThread(QThread):
             cv2.rectangle(img,(self.ew[1][0]+self.fw[0],self.ew[1][1]+self.fw[1]),(self.ew[1][0]+self.fw[0]+self.ew[1][2],self.ew[1][1]+self.fw[1]+self.ew[1][3]),(255,0,255),2) 
             cv2.circle(img, (self.ew[0][0]+self.fw[0]+self.ep[0][0],self.ew[0][1]+self.fw[1]+self.ep[0][1]), 10, (0,0,255), 10) 
             cv2.circle(img, (self.ew[1][0]+self.fw[0]+self.ep[1][0],self.ew[1][1]+self.fw[1]+self.ep[1][1]), 10, (0,0,255), 10)
-                
+            #endregion
+
             if ret:
                 self.change_pixmap_signal.emit(img)
 
@@ -241,8 +245,30 @@ class App(QWidget):
     def get_Temp_Slider(self):
         self.temp_value.setText(str(self.temp_slider.value()))
 
+    def get_Threshold_Slider(self):
+        self.threshold_label.setText(str(self.slider.value()))
+
     def __init__(self):
         super().__init__()
+        '''
+        Create the base layer of the application
+        '''
+        #region
+        #StyleSheets
+        shadow = QGraphicsDropShadowEffect()
+        shadow2 = QGraphicsDropShadowEffect()
+        shadow3 = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(20)
+        shadow.setColor(QColor(0,0,0,60))
+        shadow.setOffset(1)
+        shadow2.setBlurRadius(20)
+        shadow2.setColor(QColor(0,0,0,60))
+        shadow2.setOffset(1)
+        shadow3.setBlurRadius(20)
+        shadow3.setColor(QColor(0,0,0,60))
+        shadow3.setOffset(1)
+
+
         #Create a Widget
         self.setWindowTitle("AHD Final Project")
         self.disply_width = 1280
@@ -263,6 +289,7 @@ class App(QWidget):
         self.layout.addWidget(self.right_side)
 
         self.left_layout_vertical = QVBoxLayout(self.left_side)
+        self.left_layout_vertical.setSpacing(20)
         self.left_layout_1 = QHBoxLayout()
         self.left_layout_vertical.addLayout(self.left_layout_1)
         self.left_layout_2 = QHBoxLayout()
@@ -271,13 +298,15 @@ class App(QWidget):
         self.left_layout_vertical.addLayout(self.left_layout_3)
         self.left_layout_4 = QHBoxLayout()
         self.left_layout_vertical.addLayout(self.left_layout_4)
+        #endregion
 
         '''
         Create the LED Controls
         '''
+        #region
         self.light_widget = QWidget()
         self.left_layout_2.addWidget(self.light_widget)
-        #Create Vox
+        #Create VBox
         self.light_v_layout = QVBoxLayout(self.light_widget)
         #Create Title
         self.light_title_widget = QWidget()
@@ -295,32 +324,58 @@ class App(QWidget):
         self.button_3.setText("Toggle LED 3")
         self.button_3.clicked.connect(lambda: GPIO_Test.toggle_LED(13))
         #Create the horizontal button arrangement
-        self.light_h_layout = QHBoxLayout()
-        self.light_v_layout.addLayout(self.light_h_layout)
+        self.light_h_widget = QWidget()
+        self.light_h_layout = QHBoxLayout(self.light_h_widget)
+        self.light_v_layout.addWidget(self.light_h_widget)
+        self.light_h_widget.setMinimumHeight(80)
         self.light_h_layout.addWidget(self.button_1)
         self.light_h_layout.addWidget(self.button_2)
         self.light_h_layout.addWidget(self.button_3)
 
+        #Set Styles
+        self.light_v_layout.setContentsMargins(0,0,0,0)
+        self.light_v_layout.setSpacing(0)
+        self.light_widget.setStyleSheet("background-color: rgb(255,255,255);")
+        self.light_widget.setGraphicsEffect(shadow3)
+        self.light_title_widget.setStyleSheet("background-color: rgb(106,180,172);")
+        self.light_title_widget.setMaximumHeight(90)
+        self.light_title.setStyleSheet("color: rgb(255,255,255);")
+        self.light_title.setFont(QFont('PibotoLt',15))
+        self.light_title.setGeometry(QRect(25,35,500,50))
+        #endregion
+
         '''
         Create Temperature Controls
         '''
+        #region
         self.temp_widget = QWidget()
         self.left_layout_3.addWidget(self.temp_widget)
+
         #Create VBox
         self.temp_v_layout = QVBoxLayout(self.temp_widget)
+
         #Create Title
         self.temp_title_widget = QWidget()
         self.temp_v_layout.addWidget(self.temp_title_widget)
         self.temp_title = QLabel(self.temp_title_widget)
         self.temp_title.setText("Temperature Control")
-        #Put slider at top
+        self.temp_title.setFont(QFont('PibotoLt',15))
+
+        #Put slider at top and value
+        self.temp_slider_widget = QWidget()
+        self.temp_slider_widget.setMaximumHeight(60)
+        self.temp_v_layout.addWidget(self.temp_slider_widget)
+        self.temp_slider_layout = QHBoxLayout(self.temp_slider_widget)
         self.temp_slider = QSlider(Qt.Horizontal)
         self.temp_slider.setFocusPolicy(Qt.StrongFocus)
         self.temp_slider.setMinimum(0)
         self.temp_slider.setMaximum(100)
+        self.temp_slider.setMaximumWidth(400)
+        self.temp_slider.setMinimumWidth(400)
         self.temp_slider.setValue(GPIO_Test.get_Temperature())
         self.temp_slider.setTickInterval(1)
-        self.temp_v_layout.addWidget(self.temp_slider)
+        self.temp_slider_layout.addWidget(self.temp_slider, alignment = Qt.AlignHCenter)
+       
         #Put button at bottom
         self.button_4 = QPushButton()
         self.button_4.setText("Set Temperature")
@@ -329,35 +384,98 @@ class App(QWidget):
 
         #Create Temperature Label
         self.temp_label_widget = QWidget()
-        self.temp_v_layout.addWidget(self.temp_label_widget)
-
+        self.temp_slider_layout.addWidget(self.temp_label_widget)
         self.temp_value = QLabel(self.temp_label_widget)
+        self.temp_label_widget.setMaximumWidth(40)
         self.temp_value.setText(str(GPIO_Test.get_Temperature()))
+        self.temp_value.setFont(QFont('PibotoLt', 10))
+        self.temp_value.move(0,10)
         self.temp_slider.valueChanged.connect(self.get_Temp_Slider)
+
+        #Set Styles
+        self.temp_v_layout.setContentsMargins(0,0,0,0)
+        self.temp_v_layout.setSpacing(0)
+        self.temp_widget.setStyleSheet("background-color: rgb(255,255,255);")
+        self.temp_widget.setGraphicsEffect(shadow2)
+        self.temp_title_widget.setStyleSheet("background-color: rgb(106,180,172);")
+        self.temp_title_widget.setMaximumHeight(100)
+        self.temp_title.setStyleSheet("color: rgb(255,255,255);")
+        self.temp_title.setFont(QFont('PibotoLt',15))
+        self.temp_title.setGeometry(QRect(25,35,500,50))
+        #endregion
         
         '''
         Create the message box
         '''
+        #region
         self.msg_widget = QWidget()
         self.msg = QTextEdit(self.msg_widget)
         self.msg.setReadOnly(True)
         self.msg.setPlainText("Hello")
         self.left_layout_4.addWidget(self.msg_widget)
-
+        #endregion
 
         '''
         Create the Threshold Slider for Eye Detection
         '''
+        #region
+        self.threshold_widget = QWidget()
+        self.left_layout_1.addWidget(self.threshold_widget)
+        #Create VBox
+        self.threshold_v_layout = QVBoxLayout(self.threshold_widget)
+        #Create Title
+        self.threshold_title_widget = QWidget()
+        self.threshold_v_layout.addWidget(self.threshold_title_widget)
+        self.threshold_title = QLabel(self.threshold_title_widget)
+        self.threshold_title.setText("Eye Detection Threshold Control")
+        
+        #Create the HBox Layout
+        self.threshold_slider_widget = QWidget()
+        self.threshold_slider_widget.setMaximumHeight(80)
+        self.threshold_h_layout = QHBoxLayout(self.threshold_slider_widget)
+        self.threshold_v_layout.addWidget(self.threshold_slider_widget)
+
+        #Put Slider
         self.slider = QSlider(Qt.Horizontal)
+        self.slider.setMaximumWidth(400)
+        self.slider.setMinimumWidth(400)
         self.slider.setFocusPolicy(Qt.StrongFocus)
-        self.slider.setTickPosition(QSlider.TicksBothSides)
         self.slider.setMinimum(0)
         self.slider.setMaximum(255)
         self.slider.setValue(15)
         self.slider.setTickInterval(1)
         self.slider.valueChanged.connect(self.changeThreshold)
-        self.left_layout_1.addWidget(self.slider)
+        self.threshold_h_layout.addWidget(self.slider, alignment=Qt.AlignHCenter)
+
+        #Create Threshold Label
+        self.threshold_label_widget = QWidget()
+        self.threshold_h_layout.addWidget(self.threshold_label_widget)
+        self.threshold_label = QLabel(self.threshold_label_widget)
+        self.threshold_label.setFont(QFont('PibotoLt',10))
+        self.threshold_label_widget.setMaximumWidth(70)
+        self.threshold_label.move(0,15)
+        self.threshold_label.setMinimumWidth(70)
+        self.threshold_label.setText("15")
+        self.slider.valueChanged.connect(self.get_Threshold_Slider)
+
+
+        #Set Styles
+        self.threshold_v_layout.setContentsMargins(0,0,0,0)
+        self.threshold_v_layout.setSpacing(0)
+        self.threshold_widget.setStyleSheet("background-color: rgb(255,255,255);")
+        self.threshold_widget.setGraphicsEffect(shadow)
+        self.threshold_title_widget.setStyleSheet("background-color: rgb(106,180,172);")
+        self.threshold_title_widget.setMaximumHeight(90)
+        self.threshold_title.setStyleSheet("color: rgb(255,255,255);")
+        self.threshold_title.setFont(QFont('PibotoLt',15))
+        self.threshold_title.setGeometry(QRect(25,35,500,50))
         
+        #endregion
+
+        '''
+        Create the Video Feed
+        '''
+        #region
         #Create the Label that Holds the Image
         self.image_label1 = QLabel(self.right_side)
         self.image_label1.setGeometry(QRect(0,0,640,360))
@@ -370,13 +488,12 @@ class App(QWidget):
         self.thread.change_pixmap_signal.connect(self.update_image)
         #Start the Thread
         self.thread.start()
-        
+        #endregion
 
 if __name__ == "__main__":
     #Creates an Application
     app = QApplication(sys.argv)
     a = App()
-    
     a.show()
     test.startWebServer()
     app.exec_()
