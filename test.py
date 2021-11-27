@@ -11,7 +11,7 @@ from threading import Thread
 import netifaces as ni
 import cv2
 import numpy as np
-import GPIO_Test
+import GPIO_Test, mailbox
 from datetime import datetime
 
 #Global Variables
@@ -38,13 +38,14 @@ def index():
             pass
         elif request.form.get('send') == "send":
             text = request.form.get('message_area')
+            mailbox.put_message_remote(text)
             print(text)
         else:
             pass
     elif request.method == 'GET':
-        return render_template('index.html', comment_temp = GPIO_Test.get_Temperature_text(1), comment_time = datetime.now().strftime("%H:%M") )
+        return render_template('index.html', comment_temp = GPIO_Test.get_Temperature_text(1), comment_time = datetime.now().strftime("%H:%M"), comment_humidity = GPIO_Test.get_humidity_text(), comment_pressure = GPIO_Test.get_pressure_text())
 
-    return render_template("index.html", comment_temp = GPIO_Test.get_Temperature_text(1), comment_time = datetime.now().strftime("%H:%M"))
+    return render_template("index.html", comment_temp = GPIO_Test.get_Temperature_text(1), comment_time = datetime.now().strftime("%H:%M"), comment_humidity = GPIO_Test.get_humidity_text(), comment_pressure = GPIO_Test.get_pressure_text())
 
 
 

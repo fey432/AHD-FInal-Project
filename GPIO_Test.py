@@ -1,5 +1,6 @@
 import RPi.GPIO as GPIO
-import board, busio, adafruit_bno055
+import board, busio
+from adafruit_bme280 import basic as adafruit_bme280
 
 
 def __del__():
@@ -33,6 +34,12 @@ def get_Temperature_text(F_C):
     else:
         return str(sensor.temperature) + "°C"
 
+def get_humidity_text():
+    return str("{:.1f}".format(sensor.humidity))
+
+def get_pressure_text():
+    return str(int(sensor.pressure))
+
 def set_Temperature(temp):
     global curr_set_temp
     curr_set_temp = temp
@@ -48,6 +55,6 @@ GPIO.setup(26, GPIO.OUT)
 GPIO.setup(19,GPIO.OUT)
 GPIO.setup(13,GPIO.OUT)
 i2c = busio.I2C(board.SCL, board.SDA)
-sensor = adafruit_bno055.BNO055_I2C(i2c)
+sensor = adafruit_bme280.Adafruit_BME280_I2C(i2c)
 print(sensor.temperature)
 curr_set_temp = 78

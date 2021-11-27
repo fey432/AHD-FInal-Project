@@ -68,7 +68,7 @@
                         class="demo-chart mdl-cell mdl-cell--4-col mdl-cell--3-col-desktop">
                         <use xlink:href="#piechart" mask="url(#piemask)" />
                         <text x="0.5" y="0.5" font-family="Roboto" font-size="0.2" fill="#69c1f9" text-anchor="middle"
-                            dy="0.05">82<tspan dy="-0.07" font-size="0.15">%</tspan></text>
+                            dy="0.05">{{comment_humidity}}<tspan dy="-0.07" font-size="0.15">%</tspan></text>
                         <text x="0.5" y="0.5" font-family="Roboto" font-size="0.1" fill="#2991c6" text-anchor="middle"
                             dy="0.2">Humidity</text>
                     </svg>
@@ -76,7 +76,7 @@
                         class="demo-chart mdl-cell mdl-cell--4-col mdl-cell--3-col-desktop">
                         <use xlink:href="#piechart" mask="url(#piemask)" />
                         <text x="0.5" y="0.5" font-family="Roboto" font-size="0.2" fill="#69c1f9" text-anchor="middle"
-                            dy="0.05">350<tspan dy="0" font-size="0.075">mmHg</tspan></text>
+                            dy="0.05">{{comment_pressure}}<tspan dy="0" font-size="0.075">hPa</tspan></text>
                         <text x="0.5" y="0.5" font-family="Roboto" font-size="0.1" fill="#2991c6" text-anchor="middle"
                             dy="0.2">Pressure</text>
                     </svg>
@@ -126,7 +126,7 @@
                                         <form method="post" action="/">
                                             <div class="mdl-textfield mdl-js-textfield">
                                                 <textarea name="message_area" class="mdl-textfield__input" type="text"
-                                                    rows="3" id="sample5"></textarea>
+                                                    rows="3" id="sample5" required></textarea>
                                                 <label class="mdl-textfield__label" for="sample5">Message...</label>
                                             </div>
 

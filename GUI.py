@@ -2,18 +2,18 @@
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread, QRect, QSize, QObject, QEvent
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread, QRect, QSize, QObject, QEvent, QTimer
 import sys, cv2, time, threading, schedule
 import subprocess as sp
 from multiprocessing import Process
 import numpy as np
 import netifaces as ni
-import GPIO_Test
-import test
+import GPIO_Test, test, mailbox
 
 blob_threshold = 50
 eye_blob = np.zeros((300,200,3), dtype=np.uint8)
-
+msg = "No Updates..."
+#=====================Scheduler Tools=========================
 def run_continuously(interval=1):
     """Continuously run, while executing pending jobs at each
     elapsed time interval.
@@ -41,6 +41,7 @@ def run_continuously(interval=1):
 class WebServer(QThread):
     def __init__(self):
         test.startWebServer()
+
 
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
@@ -248,11 +249,18 @@ class App(QWidget):
     def get_Threshold_Slider(self):
         self.threshold_label.setText(str(self.slider.value()))
 
+    def updateMsg(self):
+        global msg
+        self.msg_text.setPlainText(mailbox.get_message_client())
+        print(msg)
+
+
     def __init__(self):
         super().__init__()
         '''
         Create the base layer of the application
         '''
+        stop_run_continously = run_continuously()
         #region
         #StyleSheets
         shadow = QGraphicsDropShadowEffect()
@@ -436,7 +444,7 @@ class App(QWidget):
         self.msg_v_layout.setContentsMargins(0,0,0,0)
         self.msg_v_layout.setSpacing(0)
         self.msg_title = QLabel(self.msg_title_widget)
-        self.msg_title.setText("Updates")
+        self.msg_title.setText("Messages")
         self.msg_title.setStyleSheet("color: rgb(255,255,255);")
         self.msg_title.setFont(QFont('PibotoLt', 15))
         self.msg_title.setGeometry(QRect(25,0,500,50))
@@ -450,6 +458,11 @@ class App(QWidget):
         self.msg_text.setReadOnly(True)
         self.msg_text.setFont(QFont('PibotoLt', 10))
         self.msg_text.setPlainText("No Updates...")
+        self.msg_timer = QTimer()
+        self.msg_timer.timeout.connect(self.updateMsg)
+        self.msg_timer.start(1000)
+
+
 
         #Creaet the Command List
         #Create the V Box for the cmd
