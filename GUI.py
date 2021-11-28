@@ -1,3 +1,14 @@
+'''
+GUI.py
+Author(s): Raymond Fey, Javier Garcia, Ifeanyi Anyika
+
+Roles:
+    -Front-End Design: Raymond Fey
+    -Face & Eye Detection: Javier Garcia and Ifeanyi Anyika
+    
+This python code is to core script to run the GUI on the Raspberry Pi,
+start the Web Server, and capture image frames and detect the face and eyes.
+'''
 #region imports
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import *

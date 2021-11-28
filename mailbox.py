@@ -1,3 +1,10 @@
+'''
+mailbox.py
+Author(s): Raymond Fey
+This python code is to create a helper script to
+facilite the communication process between the Flask
+Web Server and the Raspberry Pi's local applciation
+'''
 
 def put_message_client(msg):
     global remote_msg
