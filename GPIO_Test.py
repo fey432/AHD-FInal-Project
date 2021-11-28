@@ -1,3 +1,9 @@
+'''
+GPIO_test.py
+Author(s): Raymond Fey
+This python code is to interact with the GPIO and I2C
+devices connected to the Raspberry Pi
+'''
 import RPi.GPIO as GPIO
 import board, busio
 from adafruit_bme280 import basic as adafruit_bme280
