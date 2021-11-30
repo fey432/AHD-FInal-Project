@@ -19,11 +19,13 @@ import subprocess as sp
 from multiprocessing import Process
 import numpy as np
 import netifaces as ni
+from pynput import keyboard
 import GPIO_Test, test, mailbox
 
 blob_threshold = 50
 eye_blob = np.zeros((300,200,3), dtype=np.uint8)
 msg = "No Updates..."
+index = 0
 #=====================Scheduler Tools=========================
 def run_continuously(interval=1):
     """Continuously run, while executing pending jobs at each
@@ -265,6 +267,37 @@ class App(QWidget):
         self.msg_text.setPlainText(mailbox.get_message_client())
         print(msg)
 
+    def move_up(self):
+        global index
+        set_widget = self.nav_v_content.itemAt(index).widget()
+        set_widget.setStyleSheet("border: none;")
+        if(index > 0):
+            index = index - 1
+            set_widget = self.nav_v_content.itemAt(index).widget()
+            set_widget.setStyleSheet("border: 1px solid rgb(255,0,0);")
+
+    
+    def move_down(self):
+        global index
+        set_widget = self.nav_v_content.itemAt(index).widget()
+        set_widget.setStyleSheet("border: none;")
+        if(index < 2):
+            index = index + 1
+            set_widget = self.nav_v_content.itemAt(index).widget()
+            set_widget.setStyleSheet("border: 1px solid rgb(255,0,0);")
+
+
+    def on_press(self,key):
+        if(key.char == '1'):
+            self.move_up()
+        elif(key.char == '2'):
+            self.move_down()
+        elif(key.char =='3'):
+            #self.select()
+            print("selected")
+        else:
+            print("other")
+
 
     def __init__(self):
         super().__init__()
@@ -279,6 +312,7 @@ class App(QWidget):
         shadow3 = QGraphicsDropShadowEffect()
         shadow4 = QGraphicsDropShadowEffect()
         shadow5 = QGraphicsDropShadowEffect()
+        shadow6 = QGraphicsDropShadowEffect()
         shadow.setBlurRadius(20)
         shadow.setColor(QColor(0,0,0,60))
         shadow.setOffset(1)
@@ -294,6 +328,9 @@ class App(QWidget):
         shadow5.setBlurRadius(20)
         shadow5.setColor(QColor(0,0,0,60))
         shadow5.setOffset(1)
+        shadow6.setBlurRadius(20)
+        shadow6.setColor(QColor(0,0,0,60))
+        shadow6.setOffset(1)
 
         #Create a Widget
         self.setWindowTitle("AHD Final Project")
@@ -471,7 +508,7 @@ class App(QWidget):
         self.msg_text.setPlainText("No Updates...")
         self.msg_timer = QTimer()
         self.msg_timer.timeout.connect(self.updateMsg)
-        self.msg_timer.start(1000)
+        #self.msg_timer.start(200)
 
 
 
@@ -582,8 +619,50 @@ class App(QWidget):
         self.thread.start()
         #endregion
 
+        '''
+        Create the Menu Navigation Menu
+        '''
+        #Create the Widget
+        self.nav_widget = QWidget(self.right_side)
+        self.nav_widget.setGeometry(QRect(275, 371, 325,330))
+        self.nav_widget.setStyleSheet("background-color: rgb(250,255,255);")
+        self.nav_widget.setGraphicsEffect(shadow6)
+        self.nav_v_layout = QVBoxLayout(self.nav_widget)
+        self.nav_title_widget = QWidget()
+        self.nav_title_widget.setStyleSheet("background-color: rgb(106,180,172);")
+        self.nav_title_widget.setMaximumHeight(60)
+        self.nav_v_layout.addWidget(self.nav_title_widget)
+        self.nav_v_layout.setContentsMargins(0,0,0,0)
+        self.nav_v_layout.setSpacing(0)
+        self.nav_title = QLabel(self.nav_title_widget)
+        self.nav_title.setText("Commands")
+        self.nav_title.setStyleSheet("color: rgb(255,255,255);")
+        self.nav_title.setFont(QFont('PibotoLt', 15))
+        self.nav_title.setGeometry(QRect(30,0,500,50))
+
+        self.nav_content_widget = QWidget()
+        self.nav_v_layout.addWidget(self.nav_content_widget)
+
+        self.nav_v_content = QVBoxLayout(self.nav_content_widget)
+        self.nav_option_1 = QLabel()
+        self.nav_option_1.setText("Option 1")
+        self.nav_v_content.addWidget(self.nav_option_1)
+        self.nav_option_2 = QLabel()
+        self.nav_option_2.setText("Option 2")
+        self.nav_v_content.addWidget(self.nav_option_2)
+        self.nav_option_3 = QLabel()
+        self.nav_option_3.setText("Option 3")
+        self.nav_v_content.addWidget(self.nav_option_3)
+
+        self.listener = keyboard.Listener(on_press=self.on_press)
+        self.listener.start()
+
+
+
+
 if __name__ == "__main__":
     #Creates an Application
+
     app = QApplication(sys.argv)
     a = App()
     a.show()
