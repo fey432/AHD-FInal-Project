@@ -265,27 +265,41 @@ class App(QWidget):
     def updateMsg(self):
         global msg
         self.msg_text.setPlainText(mailbox.get_message_client())
-        print(msg)
+
+    def updateTemp(self):
+        self.temp_slider.setValue(int(GPIO_Test.get_Temperature()))
 
     def move_up(self):
         global index
+
         set_widget = self.nav_v_content.itemAt(index).widget()
         set_widget.setStyleSheet("border: none;")
         if(index > 0):
             index = index - 1
             set_widget = self.nav_v_content.itemAt(index).widget()
             set_widget.setStyleSheet("border: 1px solid rgb(255,0,0);")
-
+        elif(index == 0):
+            set_widget = self.nav_v_content.itemAt(index).widget()
+            set_widget.setStyleSheet("border: 1px solid rgb(255,0,0);")
+  
     
     def move_down(self):
         global index
+
         set_widget = self.nav_v_content.itemAt(index).widget()
         set_widget.setStyleSheet("border: none;")
-        if(index < 2):
+        if(index < 4):
             index = index + 1
             set_widget = self.nav_v_content.itemAt(index).widget()
             set_widget.setStyleSheet("border: 1px solid rgb(255,0,0);")
+        elif(index == 4):
+            set_widget = self.nav_v_content.itemAt(index).widget()
+            set_widget.setStyleSheet("border: 1px solid rgb(255,0,0);")
 
+    def select(self):
+        global index
+        if(index == 4):
+            mailbox.put_message_client("Client Requests Assistance")
 
     def on_press(self,key):
         if(key.char == '1'):
@@ -293,7 +307,7 @@ class App(QWidget):
         elif(key.char == '2'):
             self.move_down()
         elif(key.char =='3'):
-            #self.select()
+            self.select()
             print("selected")
         else:
             print("other")
@@ -313,6 +327,7 @@ class App(QWidget):
         shadow4 = QGraphicsDropShadowEffect()
         shadow5 = QGraphicsDropShadowEffect()
         shadow6 = QGraphicsDropShadowEffect()
+
         shadow.setBlurRadius(20)
         shadow.setColor(QColor(0,0,0,60))
         shadow.setOffset(1)
@@ -331,6 +346,7 @@ class App(QWidget):
         shadow6.setBlurRadius(20)
         shadow6.setColor(QColor(0,0,0,60))
         shadow6.setOffset(1)
+
 
         #Create a Widget
         self.setWindowTitle("AHD Final Project")
@@ -438,6 +454,9 @@ class App(QWidget):
         self.temp_slider.setValue(GPIO_Test.get_Temperature())
         self.temp_slider.setTickInterval(1)
         self.temp_slider_layout.addWidget(self.temp_slider, alignment = Qt.AlignHCenter)
+        self.temp_timer = QTimer()
+        self.temp_timer.timeout.connect(self.updateTemp)
+        self.temp_timer.start(5000)
        
         #Put button at bottom
         self.button_4 = QPushButton()
@@ -508,7 +527,7 @@ class App(QWidget):
         self.msg_text.setPlainText("No Updates...")
         self.msg_timer = QTimer()
         self.msg_timer.timeout.connect(self.updateMsg)
-        #self.msg_timer.start(200)
+        self.msg_timer.start(2000)
 
 
 
@@ -646,13 +665,24 @@ class App(QWidget):
         self.nav_v_content = QVBoxLayout(self.nav_content_widget)
         self.nav_option_1 = QLabel()
         self.nav_option_1.setText("Option 1")
+        self.nav_option_1.setAlignment(Qt.AlignCenter)
         self.nav_v_content.addWidget(self.nav_option_1)
         self.nav_option_2 = QLabel()
         self.nav_option_2.setText("Option 2")
+        self.nav_option_2.setAlignment(Qt.AlignCenter)
         self.nav_v_content.addWidget(self.nav_option_2)
         self.nav_option_3 = QLabel()
         self.nav_option_3.setText("Option 3")
+        self.nav_option_3.setAlignment(Qt.AlignCenter)
         self.nav_v_content.addWidget(self.nav_option_3)
+        self.nav_option_4 = QLabel()
+        self.nav_option_4.setText("Option 4")
+        self.nav_option_4.setAlignment(Qt.AlignCenter)
+        self.nav_v_content.addWidget(self.nav_option_4)
+        self.nav_option_5 = QLabel()
+        self.nav_option_5.setText("Request Help")
+        self.nav_option_5.setAlignment(Qt.AlignCenter)
+        self.nav_v_content.addWidget(self.nav_option_5)
 
         self.listener = keyboard.Listener(on_press=self.on_press)
         self.listener.start()

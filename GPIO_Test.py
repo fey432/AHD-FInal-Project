@@ -52,7 +52,6 @@ def set_Temperature(temp):
 
 def get_Temperature():
     global curr_set_temp
-    print(curr_set_temp)
     return curr_set_temp
 
 #Main
