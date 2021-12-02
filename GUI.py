@@ -14,7 +14,7 @@ from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread, QRect, QSize, QObject, QEvent, QTimer
-import sys, cv2, time, threading, schedule
+import sys, cv2, time, threading, schedule, os
 import subprocess as sp
 from multiprocessing import Process
 import numpy as np
@@ -24,6 +24,7 @@ import GPIO_Test, test, mailbox
 
 blob_threshold = 50
 eye_blob = np.zeros((300,200,3), dtype=np.uint8)
+state_Value = 0
 msg = "No Updates..."
 index = 0
 #=====================Scheduler Tools=========================
@@ -84,7 +85,7 @@ class VideoThread(QThread):
                 
     def detect_faces(self,img, classifier):
         gray_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        face = classifier.detectMultiScale(gray_frame, 1.05, 3)
+        face = classifier.detectMultiScale(gray_frame, 1.05, 10, minSize=(50,50))
         if len(face) > 1:
             biggest = (0, 0, 0, 0)
             for i in face:
@@ -101,7 +102,7 @@ class VideoThread(QThread):
 
     def detect_eyes(self,img,classifier):
         gray_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        eyes = classifier.detectMultiScale(gray_frame, 1.2, 3) # detect eyes
+        eyes = classifier.detectMultiScale(gray_frame, 1.05, 10, minSize=(30,30)) # detect eyes
         width = np.size(img, 1) # get face frame width
         height = np.size(img, 0) # get face frame height
         left_eye = None
@@ -154,8 +155,8 @@ class VideoThread(QThread):
             cv2.rectangle(img,(self.fw[0],self.fw[1]),(self.fw[0]+self.fw[2],self.fw[1]+self.fw[3]),(255,255,0),2) 
             cv2.rectangle(img,(self.ew[0][0]+self.fw[0],self.ew[0][1]+self.fw[1]),(self.ew[0][0]+self.fw[0]+self.ew[0][2],self.ew[0][1]+self.fw[1]+self.ew[0][3]),(255,0,255),2) 
             cv2.rectangle(img,(self.ew[1][0]+self.fw[0],self.ew[1][1]+self.fw[1]),(self.ew[1][0]+self.fw[0]+self.ew[1][2],self.ew[1][1]+self.fw[1]+self.ew[1][3]),(255,0,255),2) 
-            cv2.circle(img, (self.ew[0][0]+self.fw[0]+self.ep[0][0],self.ew[0][1]+self.fw[1]+self.ep[0][1]), 10, (0,0,255), 10) 
-            cv2.circle(img, (self.ew[1][0]+self.fw[0]+self.ep[1][0],self.ew[1][1]+self.fw[1]+self.ep[1][1]), 10, (0,0,255), 10)
+            #cv2.circle(img, (self.ew[0][0]+self.fw[0]+self.ep[0][0],self.ew[0][1]+self.fw[1]+self.ep[0][1]), 10, (0,0,255), 10) 
+            #cv2.circle(img, (self.ew[1][0]+self.fw[0]+self.ep[1][0],self.ew[1][1]+self.fw[1]+self.ep[1][1]), 10, (0,0,255), 10)
             #endregion
 
             if ret:
@@ -184,36 +185,47 @@ class VideoThread(QThread):
                 
                     #Determine if person blinked (right now only depened on eye detection, eye tracking is not working great)
                     #print(self.eye_flag)
+                    global state_Value
+                    state_Value = 0
                     if (self.State == "NOT_DETECTED"):
                         if (sum(self.eye_flag)>1):
+                            detect_iter = 1
                             self.State = "DETECTED"
                     elif (self.State == "DETECTED"):
-                        if (sum(self.eye_flag)<2):
-                            iter = 1
-                            prev_eye_flag = self.eye_flag
-                            self.State = "BLINKING"
+                        if(detect_iter>3):
+                            if (sum(self.eye_flag)<2):
+                                blink_iter = 1
+                                prev_eye_flag = self.eye_flag
+                                self.State = "BLINKING"
+                        detect_iter = detect_iter + 1
                     elif (self.State == "BLINKING"):
-                        if(iter>3):
+                        if(blink_iter>3):
                             print("lost eye detection")
                             self.State = "NOT_DETECTED"
                         else:
                             if((sum(self.eye_flag)-sum(prev_eye_flag))<1):
-                                iter = iter+1
+                                blink_iter = blink_iter+1
                             else:
-                                if(iter<2):
+                                if(blink_iter<2):
                                     if(prev_eye_flag[0]==0 and prev_eye_flag[1]==0):
                                         print("blink detected")
+                                        state_Value = 1
                                     elif(prev_eye_flag[0]==0):
                                         print("left wink detected")
+                                        state_Value = 2
                                     else:
                                         print("right wink detected")
+                                        state_Value = 3
                                 else: 
                                     if(prev_eye_flag[0]==0 and prev_eye_flag[1]==0):
                                         print("long blink detected")
+                                        state_Value = 1
                                     elif(prev_eye_flag[0]==0):
                                         print("long left wink detected")
+                                        state_Value = 2
                                     else:
                                         print("long right wink detected")
+                                        state_Value = 3
                                 self.State = "DETECTED"
                     else:
                         self.State = "DETECTED"
@@ -240,8 +252,8 @@ class App(QWidget):
         """Updates the image_label with a new opencv image"""
         qt_img = self.convert_cv_qt(cv_img)
         self.image_label1.setPixmap(qt_img)
-        qt_eye = self.convert_cv_qt(eye_blob)
-        self.image_label2.setPixmap(qt_eye)
+        #qt_eye = self.convert_cv_qt(eye_blob)
+        #self.image_label2.setPixmap(qt_eye)
     
     def convert_cv_qt(self,cv_img):
         """Convert from an opencv image to QPixmap"""
@@ -298,19 +310,44 @@ class App(QWidget):
 
     def select(self):
         global index
-        if(index == 4):
+        if(index == 0):
+            GPIO_Test.toggle_LED(26)
+        elif(index == 1):
+            GPIO_Test.toggle_LED(19)
+        elif(index == 2):
+            GPIO_Test.toggle_LED(13)
+        elif(index == 3):
             mailbox.put_message_client("Client Requests Assistance")
+        elif(index == 4):
+            raise Exception('Application Closed')
+        else:
+            pass
+    # def on_press(self,key):
+    #     if(key.char == '1'):
+    #         self.move_up()
+    #     elif(key.char == '2'):
+    #         self.move_down()
+    #     elif(key.char =='3'):
+    #         self.select()
+    #         print("selected")
+    #     else:
+    #         print("other")
+    def blinkControl(self):
+        global state_Value
 
-    def on_press(self,key):
-        if(key.char == '1'):
+        if(state_Value == 2):
             self.move_up()
-        elif(key.char == '2'):
+            print("move_up")
+        elif(state_Value == 3):
             self.move_down()
-        elif(key.char =='3'):
+            print("move_down")
+        elif(state_Value == 1):
             self.select()
-            print("selected")
+            print("select")
         else:
             print("other")
+
+        state_Value = 0
 
 
     def __init__(self):
@@ -547,7 +584,7 @@ class App(QWidget):
         self.cmd_v_layout.setContentsMargins(0,0,0,0)
         self.cmd_v_layout.setSpacing(0)
         self.cmd_title = QLabel(self.cmd_title_widget)
-        self.cmd_title.setText("Command List")
+        self.cmd_title.setText("Commands")
         self.cmd_title.setStyleSheet("color: rgb(255,255,255);")
         self.cmd_title.setFont(QFont('PibotoLt', 15))
         self.cmd_title.setGeometry(QRect(25,0,500,50))
@@ -560,7 +597,8 @@ class App(QWidget):
         self.cmd_v_layout.addWidget(self.cmd_text_widget)
         self.cmd_text.setReadOnly(True)
         self.cmd_text.setFont(QFont('PibotoLt', 10))
-        self.cmd_text.setPlainText("Single Blink")
+
+        self.cmd_text.setPlainText("\n     Left Blink: Move Up \n     Right Blink: Move Down \n     Both Blink: Select")
         #endregion
 
         '''
@@ -627,8 +665,8 @@ class App(QWidget):
         #Create the Label that Holds the Image
         self.image_label1 = QLabel(self.right_side)
         self.image_label1.setGeometry(QRect(0,0,640,360))
-        self.image_label2 = QLabel(self.right_side)
-        self.image_label2.setGeometry(QRect(0,361,640,360))
+        # self.image_label2 = QLabel(self.right_side)
+        # self.image_label2.setGeometry(QRect(0,361,640,360))
         #self.image_label.setAlignment(Qt.AlignCenter)
         #Creates the Video Capture Thread
         self.thread = VideoThread()
@@ -643,7 +681,7 @@ class App(QWidget):
         '''
         #Create the Widget
         self.nav_widget = QWidget(self.right_side)
-        self.nav_widget.setGeometry(QRect(275, 371, 325,330))
+        self.nav_widget.setGeometry(QRect(10, 371, 610,330))
         self.nav_widget.setStyleSheet("background-color: rgb(250,255,255);")
         self.nav_widget.setGraphicsEffect(shadow6)
         self.nav_v_layout = QVBoxLayout(self.nav_widget)
@@ -654,39 +692,42 @@ class App(QWidget):
         self.nav_v_layout.setContentsMargins(0,0,0,0)
         self.nav_v_layout.setSpacing(0)
         self.nav_title = QLabel(self.nav_title_widget)
-        self.nav_title.setText("Commands")
+        self.nav_title.setText("Menu")
         self.nav_title.setStyleSheet("color: rgb(255,255,255);")
         self.nav_title.setFont(QFont('PibotoLt', 15))
-        self.nav_title.setGeometry(QRect(30,0,500,50))
+        self.nav_title.setGeometry(QRect(30,10,500,50))
 
         self.nav_content_widget = QWidget()
         self.nav_v_layout.addWidget(self.nav_content_widget)
 
         self.nav_v_content = QVBoxLayout(self.nav_content_widget)
         self.nav_option_1 = QLabel()
-        self.nav_option_1.setText("Option 1")
+        self.nav_option_1.setText("Toggle LED 1")
         self.nav_option_1.setAlignment(Qt.AlignCenter)
+        self.nav_option_1.setStyleSheet("border: 1px solid rgb(255,0,0);")
         self.nav_v_content.addWidget(self.nav_option_1)
         self.nav_option_2 = QLabel()
-        self.nav_option_2.setText("Option 2")
+        self.nav_option_2.setText("Toggle LED 2")
         self.nav_option_2.setAlignment(Qt.AlignCenter)
         self.nav_v_content.addWidget(self.nav_option_2)
         self.nav_option_3 = QLabel()
-        self.nav_option_3.setText("Option 3")
+        self.nav_option_3.setText("Toggle LED 3")
         self.nav_option_3.setAlignment(Qt.AlignCenter)
         self.nav_v_content.addWidget(self.nav_option_3)
         self.nav_option_4 = QLabel()
-        self.nav_option_4.setText("Option 4")
+        self.nav_option_4.setText("Request Help")
         self.nav_option_4.setAlignment(Qt.AlignCenter)
         self.nav_v_content.addWidget(self.nav_option_4)
         self.nav_option_5 = QLabel()
-        self.nav_option_5.setText("Request Help")
+        self.nav_option_5.setText("Exit")
         self.nav_option_5.setAlignment(Qt.AlignCenter)
         self.nav_v_content.addWidget(self.nav_option_5)
 
-        self.listener = keyboard.Listener(on_press=self.on_press)
-        self.listener.start()
-
+        #self.listener = keyboard.Listener(on_press=self.on_press)
+        #self.listener.start()
+        self.blinkTimer = QTimer()
+        self.blinkTimer.timeout.connect(self.blinkControl)
+        self.blinkTimer.start(500)
 
 
 
