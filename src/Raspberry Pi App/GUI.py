@@ -25,6 +25,7 @@ import GPIO_Test, test, mailbox
 blob_threshold = 50
 eye_blob = np.zeros((300,200,3), dtype=np.uint8)
 state_Value = 0
+trigger = False
 msg = "No Updates..."
 index = 0
 #=====================Scheduler Tools=========================
@@ -185,18 +186,22 @@ class VideoThread(QThread):
                 
                     #Determine if person blinked (right now only depened on eye detection, eye tracking is not working great)
                     #print(self.eye_flag)
+                    global trigger
                     global state_Value
-                    state_Value = 0
+                    
                     if (self.State == "NOT_DETECTED"):
                         if (sum(self.eye_flag)>1):
                             detect_iter = 1
                             self.State = "DETECTED"
                     elif (self.State == "DETECTED"):
-                        if(detect_iter>3):
+                        if(detect_iter>2):
                             if (sum(self.eye_flag)<2):
                                 blink_iter = 1
                                 prev_eye_flag = self.eye_flag
                                 self.State = "BLINKING"
+                        else:
+                            if (sum(self.eye_flag)<2):
+                                self.State = "NOT_DETECTED"
                         detect_iter = detect_iter + 1
                     elif (self.State == "BLINKING"):
                         if(blink_iter>3):
@@ -226,9 +231,10 @@ class VideoThread(QThread):
                                     else:
                                         print("long right wink detected")
                                         state_Value = 3
-                                self.State = "DETECTED"
+                                self.State = "NOT_DETECTED"
+                                trigger = True
                     else:
-                        self.State = "DETECTED"
+                        self.State = "NOT_DETECTED"
                 else:
                     self.State = "NOT_DETECTED"
                             
@@ -333,21 +339,24 @@ class App(QWidget):
     #     else:
     #         print("other")
     def blinkControl(self):
+        global trigger
         global state_Value
 
-        if(state_Value == 2):
-            self.move_up()
-            print("move_up")
-        elif(state_Value == 3):
-            self.move_down()
-            print("move_down")
-        elif(state_Value == 1):
-            self.select()
-            print("select")
-        else:
-            print("other")
+        if trigger:
+            if(state_Value == 2):
+                self.move_up()
+                print("move_up")
+            elif(state_Value == 3):
+                self.move_down()
+                print("move_down")
+            elif(state_Value == 1):
+                self.select()
+                print("select")
+            else:
+                print("other")
 
-        state_Value = 0
+            trigger = False
+            state_Value = 0
 
 
     def __init__(self):
@@ -727,7 +736,7 @@ class App(QWidget):
         #self.listener.start()
         self.blinkTimer = QTimer()
         self.blinkTimer.timeout.connect(self.blinkControl)
-        self.blinkTimer.start(500)
+        self.blinkTimer.start(100)
 
 
 
